@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, mixins
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -57,6 +57,55 @@ class ProductDestroyAPIView(generics.DestroyAPIView):
 
 
 product_destroy_view = ProductDestroyAPIView.as_view()
+
+
+class ProductMixinView(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.RetrieveModelMixin,
+    generics.GenericAPIView
+    ):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        title = serializer.validated_data.get("title")
+        content = serializer.validated_data.get("content") or None
+
+        if content is None:
+            content = title
+
+        serializer.save(content=content)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if not instance.content:
+            instance.content = instance.title
+            instance.save()
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+
+
+product_mixin_view = ProductMixinView.as_view()
 
 
 @api_view(["GET", "POST"])

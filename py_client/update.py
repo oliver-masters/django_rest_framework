@@ -1,6 +1,6 @@
 import requests
 
-endpoint = "http://localhost:8000/api/products/1/update/"
+endpoint = "http://localhost:8000/api/products/3/update/"
 
 data = {
     "title": "New Product",
