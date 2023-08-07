@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 from .models import Product
-from api.mixins import StaffEditorPermissionMixin
+from api.mixins import StaffEditorPermissionMixin, UserQuerySetMixin
 from .serializers import ProductSerializer
 
 
 class ProductListCreateAPIView(
+    UserQuerySetMixin,
     StaffEditorPermissionMixin,
     generics.ListCreateAPIView
 ):
@@ -22,13 +23,25 @@ class ProductListCreateAPIView(
         if content is None:
             content = title
 
-        serializer.save(content=content)
+        serializer.save(user=self.request.user, content=content)
+
+    # This type of get filter can be done here or as a mixin
+    # See minxins.py:UserQuerySetMixin
+
+    # def get_queryset(self, *args, **kwargs):
+    #     qs = super().get_queryset(*args, **kwargs)
+    #     request = self.request
+    #     user = request.user
+    #     if not user.is_authenticated:
+    #         return Product.objects.none()
+    #     return qs.filter(user=user)
 
 
 product_list_create_view = ProductListCreateAPIView.as_view()
 
 
 class ProductDetailAPIView(
+    UserQuerySetMixin,
     StaffEditorPermissionMixin,
     generics.RetrieveAPIView
 ):
@@ -40,6 +53,7 @@ product_detail_view = ProductDetailAPIView.as_view()
 
 
 class ProductUpdateAPIView(
+    UserQuerySetMixin,
     StaffEditorPermissionMixin,
     generics.UpdateAPIView
 ):
@@ -58,6 +72,7 @@ product_update_view = ProductUpdateAPIView.as_view()
 
 
 class ProductDestroyAPIView(
+    UserQuerySetMixin,
     StaffEditorPermissionMixin,
     generics.DestroyAPIView
 ):

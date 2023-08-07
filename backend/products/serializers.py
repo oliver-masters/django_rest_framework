@@ -26,6 +26,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "my_discount",
         ]
 
+    # This is a simple way of doing validation, but validators.py is better
+
     # def validate_title(self, value):
     #     qs = Product.objects.filter(title__iexact=value)
     #     if qs.exists():
