@@ -1,21 +1,34 @@
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+
+from api.serializers import UserPublicSerializer
+
 from .models import Product
 from .validators import validate_title_no_hello, unique_product_title
 
 
+class ProductInLineSerializer(serializers.Serializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='product-detail',
+        lookup_field='pk'
+    )
+    title = serializers.CharField(read_only=True)
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    owner = UserPublicSerializer(source="user", read_only=True)
+    related_products = ProductInLineSerializer(source="user.product_set.all", read_only=True, many=True)
+    my_user_data = serializers.SerializerMethodField(read_only=True)
     my_discount = serializers.SerializerMethodField(read_only=True)
     edit_url = serializers.SerializerMethodField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="product-detail", lookup_field="pk")
     title = serializers.CharField(validators=[validate_title_no_hello, unique_product_title])
-    email = serializers.EmailField(write_only=True)
+    # email = serializers.EmailField(source="user.email", write_only=True)
 
     class Meta:
         model = Product
         fields = [
-            # "user",
-            "email",
+            "owner",
             "pk",
             "url",
             "edit_url",
@@ -24,7 +37,13 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "sale_price",
             "my_discount",
+            "my_user_data",
+            "related_products",
         ]
+
+    def get_my_user_data(self, obj):
+        return {"username": obj.user.username}
+
 
     # This is a simple way of doing validation, but validators.py is better
 
@@ -34,16 +53,19 @@ class ProductSerializer(serializers.ModelSerializer):
     #         raise serializers.ValidationError("This title is already in use")
     #     return value
 
-    def create(self, validated_data):
-        email = validated_data.pop("email")
-        print(email)
-        obj = super().create(validated_data)
-        return obj
 
-    def update(self, instance, validated_data):
-        email = validated_data.pop("email")
-        print(email)
-        return super().update(instance, validated_data)
+    # Example of how one could use an email for a one time event
+
+    # def create(self, validated_data):
+    #     email = validated_data.pop("email")
+    #     print(email)
+    #     obj = super().create(validated_data)
+    #     return obj
+    #
+    # def update(self, instance, validated_data):
+    #     email = validated_data.pop("email")
+    #     print(email)
+    #     return super().update(instance, validated_data)
 
     def get_edit_url(self, obj):
         request = self.context.get("request")
