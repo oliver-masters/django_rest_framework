@@ -6,7 +6,6 @@ from .models import Product
 
 @register(Product)
 class ProductIndex(AlgoliaIndex):
-    should_index = 'is_public'
     fields = [
         'title',
         'content',
@@ -14,3 +13,7 @@ class ProductIndex(AlgoliaIndex):
         'user',
         'public'
     ]
+    settings = {
+        'searchableAttributes': ['title', 'content'],
+        'attributesForFaceting': ['user', 'public']
+    }
