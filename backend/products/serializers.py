@@ -17,8 +17,13 @@ class ProductInLineSerializer(serializers.Serializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     owner = UserPublicSerializer(source="user", read_only=True)
-    related_products = ProductInLineSerializer(source="user.product_set.all", read_only=True, many=True)
-    my_user_data = serializers.SerializerMethodField(read_only=True)
+
+    # Demonstration of nested products
+    # related_products = ProductInLineSerializer(source="user.product_set.all", read_only=True, many=True)
+
+    # Demonstration of foreign key serialization
+    # my_user_data = serializers.SerializerMethodField(read_only=True)
+
     my_discount = serializers.SerializerMethodField(read_only=True)
     edit_url = serializers.SerializerMethodField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="product-detail", lookup_field="pk")
@@ -37,12 +42,14 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "sale_price",
             "my_discount",
-            "my_user_data",
-            "related_products",
+            # "my_user_data",
+            # "related_products",
         ]
 
-    def get_my_user_data(self, obj):
-        return {"username": obj.user.username}
+    # Demonstration of foreign key serialization
+
+    # def get_my_user_data(self, obj):
+    #     return {"username": obj.user.username}
 
 
     # This is a simple way of doing validation, but validators.py is better
